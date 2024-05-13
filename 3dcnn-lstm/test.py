@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from process import rgb2gray, normalize_data
 
-classes = ['Swiping Left', 'Swiping Right', 'Sliding Two Fingers Left', 'Sliding Two Fingers Right', 'Doing other things']
+classes = ['Swiping Up', 'Swiping Right', 'Swiping Left', 'Doing other things']
 
 def main():
     model = tf.keras.models.load_model("3dcnn_lstm.h5")
@@ -19,17 +19,19 @@ def main():
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         to_predict.append(cv2.resize(gray, (64, 64)))
-        
             
-        if len(to_predict) == 30:
+        if len(to_predict) == 15:
             frame_to_predict = np.array(to_predict, dtype=np.float32)
             frame_to_predict = normalize_data(frame_to_predict)
             predict = model.predict(frame_to_predict)
 
-            current = classes[np.argmax(predict)]
-            
-            print('Class = ',current, 'Precision = ', np.amax(predict)*100,'%')
+            try:
+                current = classes[np.argmax(predict)]            
 
+                if np.amax(predict) * 100 >= 50:
+                    print('Class = ',current, 'Precision = ', np.amax(predict)*100,'%')
+            except:
+                pass
 
             to_predict = []
         cv2.putText(frame, classe, (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0),1,cv2.LINE_AA)

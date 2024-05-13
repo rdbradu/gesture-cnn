@@ -5,40 +5,42 @@ from tensorflow import keras
 from keras import layers
 from keras.layers import Dense, MaxPooling3D, Conv3D, Flatten, ConvLSTM2D, BatchNormalization, Dropout, RandomFlip, RandomRotation
 from keras.models import Sequential
+from keras.optimizers import SGD
 
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
-from dataset import extract_dataset
 from process import extract_frames
+from dataset import extract_dataset
 
 def conv3D(conv_filters=(32, 64), dense_nodes=(128, )):
     model = Sequential()
-    #! DATA AUGMENTATION
-    # model.add(RandomFlip("horizontal_and_vertical"))
-    # model.add(RandomRotation(0.2))
 
-    model.add(Conv3D(conv_filters[0], (3, 3, 3), activation='relu', name="conv", data_format='channels_last'))
+    model.add(Conv3D(conv_filters[0], (3, 3, 3), activation='relu', name="conv1", data_format='channels_last'))
     model.add(MaxPooling3D((2, 2, 2), data_format='channels_last'))
+    model.add(Dropout(0.25))
     model.add(BatchNormalization())
 
-    model.add(Conv3D(conv_filters[1], (3, 3, 3), activation='relu', name="conv0", data_format='channels_last'))
+    model.add(Conv3D(conv_filters[1], (3, 3, 3), activation='relu', name="conv2", data_format='channels_last'))
     model.add(MaxPooling3D((2, 2, 2), data_format='channels_last'))
+    model.add(Dropout(0.25))
     model.add(BatchNormalization())
 
-    model.add(ConvLSTM2D(40, (3, 3), dropout=0.2))
+    model.add(ConvLSTM2D(filters=40, kernel_size=(3, 3), padding='same', return_sequences=True, dropout=0.1))
+    model.add(ConvLSTM2D(filters=20, kernel_size=(3, 3), padding='same', dropout=0.1))
+
     model.add(Flatten())
 
     model.add(Dense(dense_nodes[0], activation="relu"))
-    model.add(Dense(5, activation='softmax'))
+    model.add(Dense(4, activation='softmax'))
 
-    model.compile(optimizer="adam", loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=SGD(learning_rate=0.01, momentum=0.9), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
 
 def main():
-    # extract_dataset("./20bnjester/Train/", "./trainset/", "./20bnjester/Train.csv", "train", sample_count=2000)
-    # extract_dataset("./20bnjester/Validation/", "./validationset/", "./20bnjester/Validation.csv", "validation", sample_count=500)
+    extract_dataset("./20bnjester/Train/", "./trainset/", "./20bnjester/Train.csv", "train")
+    extract_dataset("./20bnjester/Validation/", "./validationset/", "./20bnjester/Validation.csv", "validation")
     train_x, train_y = extract_frames("train.csv", "./trainset/")
     val_x, val_y = extract_frames("validation.csv", "./validationset/")
 
@@ -70,10 +72,13 @@ def main():
     val_x = np.array(scaled_val_x)
     val_y = np.array(val_y)
 
+    train_dataset = tf.data.Dataset.from_tensor_slices((scaled_train_x, train_y))
+    val_dataset = tf.data.Dataset.from_tensor_slices((scaled_val_x, val_y))
+
     cnn = conv3D()
     cnn.summary()
 
-    history = cnn.fit(train_x, train_y, validation_data=(val_x, val_y), batch_size=32, epochs=15)
+    history = cnn.fit(train_x, train_y, validation_data=(val_x, val_y), batch_size=16, epochs=10)
     cnn.save("3dcnn_lstm.h5")
     plt.plot(history.history["val_accuracy"])
     plt.plot(history.history["accuracy"])

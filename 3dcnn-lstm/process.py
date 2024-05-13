@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 
 frames_cap = 30
-classes = ['Swiping Left', 'Swiping Right', 'Sliding Two Fingers Left', 'Sliding Two Fingers Right', 'Doing other things']
+classes = ['Swiping Up', 'Swiping Right', 'Swiping Left', 'Doing other things']
 
 def random_flip(image):
     choice = np.random.choice([1, 2, 3], p = (0.66, 0.16, 0.18))
@@ -59,6 +59,22 @@ def extract_frames(csv, path):
 
     return x, y
 
+def extract_single_sequence(path, directory):
+    frames = unify_frames(path+directory)
+    frameset = []
+
+    result = []
+
+    if len(frames) == frames_cap:
+        for frame in frames:
+            frame = resize_frame(path+directory+'/'+frame)
+            frameset.append(frame)
+            if len(frameset) == 15:
+                result.append(frameset)
+                break
+    
+    return frameset
+
 def extract_test_frames(path):
     test_frames = []
     dirs = os.listdir(path)
@@ -79,6 +95,6 @@ def extract_test_frames(path):
     return test_frames
 
 def normalize_data(np_data):
-    scaled_images  = np_data.reshape(-1, 30, 64, 64, 1)
+    scaled_images  = np_data.reshape(-1, 15, 64, 64, 1)
     return scaled_images
 

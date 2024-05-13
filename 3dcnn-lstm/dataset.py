@@ -12,16 +12,16 @@ def copy_directory(src, dest):
 		print("Couldn't copy directory. Error: %s" % e)
 		return 3
 	
-def extract_dataset(source, destination, csv_file, set_type, sample_count=1500):
+def extract_dataset(source, destination, csv_file, set_type, sample_count=-1):
 	csv = pd.read_csv(csv_file, delimiter=",")
-	classes = ['Swiping Left', 'Swiping Right', 'Sliding Two Fingers Left', 'Sliding Two Fingers Right', 'Doing other things']
+	classes = ['Swiping Up', 'Swiping Right', 'Swiping Left', 'Doing other things']
 
 	rows = []
 
 	for current in classes:
 		count = 0
 		for index, video_id in enumerate(csv["video_id"]):
-			if count == sample_count:
+			if count == sample_count and sample_count != -1:
 				break
 
 			if csv["label"][index] == current:
