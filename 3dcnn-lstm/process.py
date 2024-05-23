@@ -7,16 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 
 frames_cap = 30
-classes = ['Swiping Up', 'Swiping Right', 'Swiping Left', 'Doing other things']
-
-def random_flip(image):
-    choice = np.random.choice([1, 2, 3], p = (0.66, 0.16, 0.18))
-    if choice == 1:
-        return image
-    elif choice == 2:
-        return np.array(np.flipud(image))
-    elif choice == 3:
-        return np.array(np.fliplr(image))
+classes = ['Swiping Up', 'Swiping Down', 'Swiping Right', 'Swiping Left', 'Doing other things']
     
 def rgb2gray(rgb):
     return np.dot(rgb[...,:3], [0.2989, 0.5870, 0.1140])
@@ -32,7 +23,7 @@ def unify_frames(path):
 
 def resize_frame(frame):
     frame = img.imread(frame)
-    frame = cv2.resize(frame, (64, 64))
+    frame = cv2.resize(frame, (112, 112))
     return frame
 
 def extract_frames(csv, path):
@@ -50,8 +41,8 @@ def extract_frames(csv, path):
         if len(frames) == frames_cap:
             for frame in frames:
                 frame = resize_frame(path+directory+'/'+frame)
-                frameset.append(rgb2gray(frame))
-                if len(frameset) == 15:
+                frameset.append(frame)
+                if len(frameset) == 30:
                     x.append(frameset)
                     y.append(classes.index(targets[int(directory)]))
                     counter +=1
@@ -95,6 +86,6 @@ def extract_test_frames(path):
     return test_frames
 
 def normalize_data(np_data):
-    scaled_images  = np_data.reshape(-1, 15, 64, 64, 1)
+    scaled_images  = np_data.reshape(-1, 30, 112, 112, 1)
     return scaled_images
 

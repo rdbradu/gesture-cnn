@@ -14,7 +14,7 @@ def copy_directory(src, dest):
 	
 def extract_dataset(source, destination, csv_file, set_type, sample_count=-1):
 	csv = pd.read_csv(csv_file, delimiter=",")
-	classes = ['Swiping Up', 'Swiping Right', 'Swiping Left', 'Doing other things']
+	classes = ['Swiping Up', 'Swiping Down', 'Swiping Right', 'Swiping Left', 'Doing other things']
 
 	rows = []
 
