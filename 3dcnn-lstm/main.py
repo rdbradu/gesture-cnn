@@ -2,20 +2,18 @@ import tensorflow as tf
 
 from tensorflow import keras
 
-from keras import layers
+from augment import VideoAugmentation
 from keras.layers import Dense, MaxPooling3D, Conv3D, Flatten, ConvLSTM2D, BatchNormalization, Dropout, RandomFlip, RandomRotation, LSTM, Reshape
 from keras.models import Sequential
-from keras.optimizers import SGD, Adam
+from keras.optimizers import Adam
 
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 from process import extract_frames
-from augment import VideoAugmentation
-from dataset import extract_dataset
 
-def conv3DLSTM(conv_filters=(32, 64, 128), dense_nodes=(256, 128)):
+def conv3DLSTM(conv_filters=(32, 64, 128), dense_nodes=(512, 256)):
     model = Sequential()
 
     model.add(VideoAugmentation(input_shape=(30, 112, 112, 3)))
@@ -65,22 +63,10 @@ def main():
     train_y = np.array(train_y)
     val_y = np.array(val_y)
 
-    # scaler = StandardScaler()
-    # scaled_train_x  = scaler.fit_transform(train_x.reshape(-1, 30*112*112))
-    # scaled_train_x  = scaled_train_x.reshape(-1, 30, 112, 112, 3)
-
-    # scaled_val_x  = scaler.fit_transform(val_x.reshape(-1, 30*112*112))
-    # scaled_val_x  = scaled_val_x.reshape(-1, 30, 112, 112, 3)
-
-    # train_x = np.array(scaled_train_x)
-    # train_y = np.array(train_y)
-
-    # val_x = np.array(scaled_val_x)
-    # val_y = np.array(val_y)
-
     nn = conv3DLSTM()
+    early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
 
-    history = nn.fit(train_x, train_y, validation_data=(val_x, val_y), batch_size=32, epochs=15)
+    history = nn.fit(train_x, train_y, validation_data=(val_x, val_y), batch_size=32, epochs=40, callbacks=[early_stopping])
     nn.save("3dcnn_lstm.h5")
     plt.plot(history.history["val_accuracy"])
     plt.plot(history.history["accuracy"])
